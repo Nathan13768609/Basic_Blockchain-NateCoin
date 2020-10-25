@@ -18,7 +18,7 @@ class Block{
     }
 
     calculateHash(){
-        return SHA256(this.previouseHash + this.timestamp + JSON.stringify(this.data) + this.nonce).toString(); //return a String instead of an Object
+        return SHA256(this.previouseHash + this.timestamp + JSON.stringify(this.transactions) + this.nonce).toString(); //return a String instead of an Object
     }
 
     mineBlock(difficulty){
@@ -26,10 +26,7 @@ class Block{
 
         while(this.hash.substring(0, difficulty) !== Array(difficulty + 1).join('0')){
             this.nonce++; //ensures a new hash will be calculated
-            let lastHash = this.hash;
             this.hash = this.calculateHash();
-
-            console.log(this.hash == lastHash);
         }
 
         console.log("Block mined: " + this.hash);
@@ -57,6 +54,9 @@ class Blockchain{
         block.mineBlock(this.difficulty);
 
         console.log('Block successfully mined!');
+        
+        this.previousHash = this.getLatestBlock().hash;
+        
         this.chain.push(block);
 
         this.pendingTransactions = [
