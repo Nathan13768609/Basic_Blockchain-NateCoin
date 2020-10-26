@@ -9,7 +9,7 @@ const myWalletAddress = myKey.getPublic('hex');
 let NateCoin = new Blockchain();
 
 const tx1 = new Transaction(myWalletAddress, 'public key goes here', 10);
-tx1.signTransaction(myKey);
+tx1.signTransaction(myKey); //the sender of the transaction must sign with their key for validation.
 NateCoin.addTransaction(tx1);
 
 console.log('\n Starting the miner...');
@@ -17,6 +17,6 @@ NateCoin.minePendingTransactions(myWalletAddress);
 
 console.log('\nBalance of nathan is ', NateCoin.getBalanceOfAddress(myWalletAddress));
 
-NateCoin.chain[1].transactions[0].amount = 1;
+NateCoin.chain[1].transactions[0].toAddress = 'Trump';
 
 console.log('Is chain valid?', NateCoin.isChainValid());

@@ -16,7 +16,7 @@ class Block{
     mineBlock(difficulty){
         console.log('Mining new block...')
 
-        while(this.hash.substring(0, difficulty) !== Array(difficulty + 1).join('0')){
+        while(this.hash.substring(0, difficulty) !== Array(difficulty + 1).join('0')){  //checks the starting digits against the required number of starting zeros.
             this.nonce++; //ensures a new hash will be calculated
             this.hash = this.calculateHash();
         }
@@ -24,7 +24,7 @@ class Block{
         console.log("Block mined: " + this.hash);
     }
 
-    hasValidTransaction(){
+    hasValidTransactions(){
         for(const tx of this.transactions){
             if(!tx.isValid()){
                 return false;
