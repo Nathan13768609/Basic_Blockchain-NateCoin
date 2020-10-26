@@ -1,37 +1,8 @@
-const SHA256 = require('crypto-js/sha256') //sha256 is a hashing function in the crypto-js library 
+const EC = require('elliptic').ec;
+const ec = new EC('secp256k1');
 
-class Transaction{
-    constructor(fromAddress, toAddress, amount) {
-        this.fromAddress = fromAddress;
-        this.toAddress = toAddress;
-        this.amount = amount;
-    }
-}
-
-class Block{
-    constructor(timestamp, transactions, previousHash = ''){
-        this.timestamp = timestamp;
-        this.transactions = transactions;
-        this.previousHash = previousHash;
-        this.hash = this.calculateHash();
-        this.nonce = 0; //used so that a different hash cna be calculated when mining.
-    }
-
-    calculateHash(){
-        return SHA256(this.previouseHash + this.timestamp + JSON.stringify(this.transactions) + this.nonce).toString(); //return a String instead of an Object
-    }
-
-    mineBlock(difficulty){
-        console.log('Mining new block...')
-
-        while(this.hash.substring(0, difficulty) !== Array(difficulty + 1).join('0')){
-            this.nonce++; //ensures a new hash will be calculated
-            this.hash = this.calculateHash();
-        }
-
-        console.log("Block mined: " + this.hash);
-    }
-}
+const {Block} = require('./block');
+const {Transaction} = require('./transaction');
 
 class Blockchain{
     constructor (){
@@ -50,6 +21,9 @@ class Blockchain{
     }
 
     minePendingTransactions(miningRewardAddress){
+        const rewardTx = new Transaction(null, miningRewardAddress, this.miningReward);
+        this.pendingTransactions.push(rewardTx);    //we can push the reward transaction before the block has actually been mined because the reward cannot be sent until the block is mined and added to the chain anyway. This allows the miner can receive the award as soon as the block has been added to the chain.
+        
         let block = new Block(Date.now(), this.pendingTransactions);
         block.mineBlock(this.difficulty);
 
@@ -59,12 +33,19 @@ class Blockchain{
         
         this.chain.push(block);
 
-        this.pendingTransactions = [
-            new Transaction(null, miningRewardAddress, this.miningReward)
-        ];
+        this.pendingTransactions = [];  //reset the pending transactions to empty now that they have been added to the chain in the last block.
     }
 
-    createTransaction(transaction){
+    addTransaction(transaction){
+
+        if(!transaction.fromAddress || !transaction.toAddress){
+            throw new Error('Transaction must include from and to address.')
+        }
+
+        if(!transaction.isValid()){
+            throw new Error('Cannot add invalid transaction to chain.')
+        }
+        
         this.pendingTransactions.push(transaction);
     }
 
@@ -90,7 +71,11 @@ class Blockchain{
             const currentBlock = this.chain[i];
             const previousBlock = this.chain[i-1];
 
-            if (currentBlock.hash !== currentBlock.calculateHash()){
+            if(!currentBlock.hasValidTransaction()){
+                return false;
+            }
+
+            if(currentBlock.hash !== currentBlock.calculateHash()){
                 return false;
             }
 

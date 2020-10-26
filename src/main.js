@@ -1,16 +1,22 @@
-const {Blockchain, Transaction} = require('./blockchain');
+const {Blockchain, Transaction} = require('./API/blockchain/blockchain');
+const EC = require('elliptic').ec;
+const ec = new EC('secp256k1');
+
+const myKey = ec.keyFromPrivate('3f7a3a98d76f91e9ddfc008e6aba6f6ef8a3b05b4939c1b5d2b908819425ddb1')
+const myWalletAddress = myKey.getPublic('hex');
+
 
 let NateCoin = new Blockchain();
-NateCoin.createTransaction(new Transaction('address1', 'address2', 100))
-NateCoin.createTransaction(new Transaction('address2', 'address1', 50))
+
+const tx1 = new Transaction(myWalletAddress, 'public key goes here', 10);
+tx1.signTransaction(myKey);
+NateCoin.addTransaction(tx1);
 
 console.log('\n Starting the miner...');
-NateCoin.minePendingTransactions('nathans-address');
+NateCoin.minePendingTransactions(myWalletAddress);
 
-console.log('\nBalance of nathan is ', NateCoin.getBalanceOfAddress('nathans-address'));
+console.log('\nBalance of nathan is ', NateCoin.getBalanceOfAddress(myWalletAddress));
 
+NateCoin.chain[1].transactions[0].amount = 1;
 
-console.log('\n Starting the miner again...');
-NateCoin.minePendingTransactions('nathans-address');
-
-console.log('\nBalance of nathan is ', NateCoin.getBalanceOfAddress('nathans-address'));
+console.log('Is chain valid?', NateCoin.isChainValid());
